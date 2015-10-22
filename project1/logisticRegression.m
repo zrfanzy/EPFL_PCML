@@ -4,7 +4,7 @@ function beta = logisticRegression(y,tX,alpha)
 % algorithm parametes
 sigmoid = @(x) exp(x)./(1+exp(x));
 maxIters = 1000;
-convergent = 0.01;
+converged = 0.01;
 N = length(y);
 
 % initilization of beta:
