@@ -1,3 +1,5 @@
 function beta = ridgeRegression(y, tX, lambda)
-beta = pinv(tX' * tX + lambda * eye(length(tX' * tX))) * tX' * y;
-
+lambdaI = lambda * eye(length(tX' * tX));
+lambdaI(1,1) = 0;
+beta = inv(tX' * tX + lambdaI) * tX' * y;
+end
