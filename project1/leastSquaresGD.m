@@ -1,8 +1,8 @@
 function beta = leastSquaresGD(y, tX, alpha)
 
   % learning parametes
-  maxIters = 1000;
-  converged = 0.01;
+  maxIters = 10000;
+  converged = 1e-10;
 
   % initialize
   beta = zeros(size(tX, 2), 1);
