@@ -31,7 +31,7 @@ function beta = leastSquaresGD(y, tX, alpha)
     L_all(k) = L;
 
     % print
-    fprintf('Interation %d, %.2f  %.2f %.2f\n', k, L, beta(1), beta(2));
+    fprintf('Interation %d, got rmse: %.2f\n', k, sqrt(L));
 
   end
 
