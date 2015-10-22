@@ -1,14 +1,16 @@
 function beta = logisticRegression(y,tX,alpha)
 % Logistic regression using gradient descent or Newton's method.
 
-%% algorithm parametes
+% algorithm parametes
 sigmoid = @(x) exp(x)./(1+exp(x));
 maxIters = 1000;
-convergent = 0.2;
-%% initilization of beta:
-beta = [1;3;-8];
+convergent = 0.01;
+N = length(y);
 
-%% start iterate
+% initilization of beta:
+beta = zeros(size(tX, 2), 1);
+
+% start iterate
 fprintf('Starting iterations, press Ctrl+c to break\n');
 fprintf('L  beta0 beta1 beta2\n');
 
@@ -19,10 +21,14 @@ fprintf('L  beta0 beta1 beta2\n');
     % cost function
     L = (y)' * tX * beta - sum(log(1 + exp(tX * beta))); % log likelyhood of beta
     L = -L ; % negetaive as cost function
+    L = L/N;
     
-    % check convergent
-    if L < convergent
-        break
+    % check convergence
+    if k > 1
+        if abs(L_all(k - 1) - L) <= converged 
+            fprintf('Got convergence, quit interation\n');
+            break;
+        end
     end
 %%   if use gradient descent
     % gradient update to find beta
@@ -57,7 +63,5 @@ fprintf('L  beta0 beta1 beta2\n');
  
 fprintf('run %d iteration beta is: \n', k);
 display(beta);  
-
-
 
 end

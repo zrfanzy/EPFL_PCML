@@ -11,7 +11,7 @@ load('Shanghai_regression.mat');
 % penLogisticRegression
 % load('Shanghai_classificaion.mat');
 
-for s = 1:50 % # of seeds
+for s = 1 % # of seeds
     setSeed(s);
     
     % randomly permute training data

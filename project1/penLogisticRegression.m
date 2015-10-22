@@ -1,15 +1,17 @@
 function beta = penLogisticRegression(y,tX,alpha,lambda)
 % Penalized logistic regression using gradient descent or Newton's method.
 
-%% algorithm parametes
+% algorithm parametes
 sigmoid = @(x) exp(x)./(1+exp(x));
 maxIters = 1000;
-%% initilization of beta:
-beta = [1;3;-8];
+converged = 0.01;
+N = length(y);
+
+% initilize
+beta = zeros(size(tX, 2), 1);
 
 %% start iterate
-fprintf('Starting iterations, press Ctrl+c to break\n');
-fprintf('L  beta0 beta1 beta2\n');
+fprintf('Starting iterations');
 
  for k = 1:maxIters
     % compute gradient:
@@ -19,14 +21,16 @@ fprintf('L  beta0 beta1 beta2\n');
     % cost function
     L = (y)' * tX * beta - sum(log(1 + exp(tX * beta)));
     L = -L + lambda * ((beta)'*beta);
-    
-    % check convergent
-    if L < convergent
-        break
+    L = L/N;
+    % check convergence
+    if k > 1
+        if abs(L_all(k - 1) - L) <= converged
+            fprintf('Got convergence, quit interation\n');
+            break;
+        end
     end
 %%   if use gradient descent
     % gradient update to find beta
-
     %   beta = beta - alpha * g;
     
 %%  if use newton method:
