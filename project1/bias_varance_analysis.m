@@ -37,7 +37,7 @@ for s = 1:50 % # of seeds
     	tXTe = [ones(size_test, 1) XTe];      
  
 %% for ridge regression
-        beta = ridgeRegression(y,tXTr, lambda(k));
+        beta = ridgeRegression(yTr,tXTr, lambda(k));
         
 %% for penLogisticRegression
         % set stepsize alpha
