@@ -2,10 +2,11 @@ function beta = leastSquaresGD(y, tX, alpha)
 
   % learning parametes
   maxIters = 1000;
-  converged = 0;
+  converged = 0.01;
 
   % initialize
-  beta = zeros(length(y), 1);
+  beta = zeros(size(tX, 2), 1);
+  N = length(y);
 
   for k = 1:maxIters
     
