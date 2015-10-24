@@ -174,9 +174,9 @@ lambda = logspace(-1,10,20);
             % compute the mean error for k cross validation of the same lambda
             fprintf('dg %d mean%dfold var: %.4f for lambda %.2f  ',degree(i_degree),k,lambda(i));
             
-            rmseTr_lamb = mean(mseTrSub);
-            rmseTe_lamb = mean(mseTeSub);
-            fprintf('tr %.4f te %.4f\n ',rmseTr_lamb,rmseTe_lamb);
+            rmseTr_lamb(i) = mean(mseTrSub);
+            rmseTe_lamb(i) = mean(mseTeSub);
+            fprintf('tr %.4f te %.4f\n ',rmseTr_lamb(i),rmseTe_lamb(i));
     %         box(:,i) = mseTeSub;
     end % end of runing for different lambda
     
