@@ -104,7 +104,7 @@ for s = 1 : length(seeds)
 setSeed(seeds(s));
 
 % test on degree: manipulate the features
-degree = 5:10;
+degree = 6:10;
 for i_degree  = 1:length(degree)
 for i=1:71
      if(~isempty(find(non_norm == i)))
@@ -123,7 +123,7 @@ for i=1:71
      end
 end
 X = X_expand(:,2:size(X_expand,2));
-
+fprintf('featue input %d',size(X,1));
 
 % split data in K fold (we will only create indices)
 
@@ -142,7 +142,7 @@ end
 
 % lambda values found for each degree
 % lambda = logspace(-5,15 ,20);
-lambda = logspace(-10,10 ,50);
+lambda = logspace(-1,10,20);
 
     for i = 1:length(lambda)
     % K-fold cross validation for each lambda
@@ -165,14 +165,18 @@ lambda = logspace(-10,10 ,50);
             tXTe_cv = [ones(length(yTe_cv), 1) XTe_cv]; 
 
             % ridge regression    
+            
             beta = ridgeRegression(yTr_cv,tXTr_cv,lambda(i));
 
             mseTrSub(k) = computeCost(yTr_cv, tXTr_cv, beta); 
             mseTeSub(k) = computeCost(yTe_cv, tXTe_cv, beta);
         end
             % compute the mean error for k cross validation of the same lambda
+            fprintf('dg %d mean%dfold var: %.4f for lambda %.2f  ',degree(i_degree),k,lambda(i));
+            
             rmseTr_lamb = mean(mseTrSub);
             rmseTe_lamb = mean(mseTeSub);
+            fprintf('tr %.4f te %.4f\n ',rmseTr_lamb,rmseTe_lamb);
     %         box(:,i) = mseTeSub;
     end % end of runing for different lambda
     
@@ -183,7 +187,7 @@ beta = ridgeRegression(yTr,tXTr,lambda(index_best_lambda));
 mseTr_degree(s,i_degree) = computeCost(yTr, tXTr, beta);
 mseTe_degree(s,i_degree) = computeCost(yTe, tXTe, beta);
 
-fprintf('degree %d ; lambda %f;  test: %.4f; train:%.4 f \n',...
+fprintf('\ndegree %d ; lambda %f;  test: %.4f; train:%.4f \n',...
     degree(i_degree),lambda(index_best_lambda),...
     mseTe_degree(s,i_degree),mseTr_degree(s,i_degree));
 
