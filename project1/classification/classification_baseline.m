@@ -1,19 +1,31 @@
-% clear all
+clear all
 % ridgeRegression
 load('Shanghai_classification.mat');
 
 sigmoid = @(x) exp(x)./(1+exp(x));
-%X = X_train;
 y = normalization_claasi(y_train);
-degree =[1/2,6];
+
+classlabel = X_train(:,35) > -10;
+
+classes1 = find(classlabel==1);
+classes2 = find(classlabel==1);
+
+degree =1:6;
+
+for class=1:2
 
 for i = 1:length(degree)
-X = mypoly(X_train,degree(i));
-X = normalizeFeature(X);
+tX = normalizeFeature(X_train);
+X = mypoly(tX,degree(i));
+
 for s = 1:10
 
 prop = 0.8;
-[XTr, yTr, XTe, yTe] = split_setseed(y, X, prop,s);
+if class == 1
+    [XTr, yTr, XTe, yTe] = split_setseed(y(classes1), X(classes1,:), prop,s);
+else
+    [XTr, yTr, XTe, yTe] = split_setseed(y(classes2), X(classes2,:), prop,s);
+end
 % for differnet train set selection:
 % size1 = size(XTr,1)*0.1*p;
 % [XTr, yTr, nump2, nump3] = split_setseed(yTr, XTr, 0.1*p,s);
@@ -32,7 +44,9 @@ end
 
 % lambda values found for each degree
 lambda = logspace(-3,1 ,6);
-lambda = [0.0001,lambda];
+%lambda = [0.0001];
+%clear lambda;
+%lambda = [0.0001];
 
     for l = 1:length(lambda)
     % K-fold cross validation for each lambda
@@ -64,14 +78,21 @@ lambda = [0.0001,lambda];
      end % end of runing for different lambda
     
 [numb,index_best_lambda] = min(rmseTe_lamb(s,i,:));
-
 beta = penLogisticRegression(yTr,tXTr,alpha,lambda(index_best_lambda));
+
+if class == 1
+    classbeta1 = beta;
+else
+    classbeta2 = beta;
+end
 mseTr(s,i) = computeCost_classi(yTr, tXTr, beta)/length(yTr);
 mseTe(s,i) = computeCost_classi(yTe, tXTe, beta)/length(yTe);
 
 end % end of seeds
 
 end % end of degree
+
+end
 
 
 %% some plotting
