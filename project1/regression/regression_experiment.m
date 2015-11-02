@@ -14,6 +14,10 @@ end
 
 X = normalizeFeature(X_train);
 
+binary_ft = [18,19,20,35,47];
+categori_ft = [13,16,17,22,36,49,52,54];
+non_norm = [13,16,17,22,36,18,19,20,35,47,49,52,54];
+
 % find outlier with easy leastSquares & remove
 figure;
 for label = 1 : 3
@@ -28,13 +32,13 @@ for label = 1 : 3
     hist(abs(tY - y_train(ind)), 100);
     
     % remove outliers
-    %for j = length(ind):-1:1
-    %    if abs(tY(j) - y_train(ind(j))) > 2000
-    %        X(ind(j),:)=[];
-    %        y_train(ind(j),:)=[];
-    %        labely(ind(j)) = [];
-    %    end
-    %end
+    for j = length(ind):-1:1
+        if abs(tY(j) - y_train(ind(j))) > 2000
+            X(ind(j),:)=[];
+            y_train(ind(j),:)=[];
+            labely(ind(j)) = [];
+        end
+    end
 end
 
 % train for each label
@@ -46,15 +50,36 @@ for label = 1 : 3
     
     ind = find(labely == label);
     thisY = y_train(ind);
-    N = length(thisY);
+    N = length(thisY)
 
-    seeds = 1:10;
+    seeds = 1:1;
     for s = 1 : length(seeds)
         setSeed(seeds(s));
 
         % degrees
-        for degree  = 1:9
-            tX = [ones(N, 1) mypoly(X(ind), degree)];
+        for degree  = 2:4
+            X_ind = X(ind,:);
+            X_expand = zeros(size(y_train(ind),1),1);
+            for i=1:71
+                if(~isempty(find(categori_ft == i)))
+%            append_cols = normalizeFeature(X_train(:,i));
+                    append_cols = dummy_encoding(X_ind(:,i)');
+                    X_expand = [X_expand append_cols];
+                elseif(~isempty(find(binary_ft == i))) 
+                    append_cols = X_ind(:,i);
+                    X_expand = [X_expand append_cols];
+                elseif(i==57 || i ==65 ||i ==21||i==27||i==69||i==34||i==51||i==5||i==45)
+                    continue;
+                else 
+                    append_cols = X_ind(:,i);
+                    append_cols = mypoly(append_cols,degree);
+                    append_cols = normalizeFeature(append_cols);
+                    X_expand = [X_expand append_cols];
+          
+                end
+            end
+            tX = X_expand(:,2:size(X_expand,2));%ones(N, 1) mypoly(X(ind,:), degree)];
+            %tX = [ones(N,1) X(ind,:)];
 
             % K fold
             K = 5;
@@ -65,8 +90,10 @@ for label = 1 : 3
                 idxCV(k,:) = idx(1+(k-1)*Nk:k*Nk);
             end
 
-            lambda = logspace(-5,15,10);
+            lambda = logspace(-2,0,20);
+            
             lambda = [0,lambda];
+            %lambda = [0];
             
             for i = 1:length(lambda)
                 % K-fold cross validation for each lambda
@@ -86,14 +113,13 @@ for label = 1 : 3
                     tXTe_cv = [XTe_cv]; 
 
                     % ridge regression    
-
                     beta = ridgeRegression(yTr_cv,tXTr_cv,lambda(i));
 
                     mseTrSub(k) = computeCost(yTr_cv, tXTr_cv, beta); 
                     mseTeSub(k) = computeCost(yTe_cv, tXTe_cv, beta);
                 end
                 % compute the mean error for k cross validation of the same lambda
-                fprintf('dg %d mean%dfold varErrTe: %.4f for lambda %.2f  ',degree,k,var(mseTeSub),lambda(i));
+                fprintf('dg %d mean%dfold for lambda %.2f\n',degree,k,lambda(i));
 
                 rmseTr_lamb(label, i) = mean(mseTrSub);
                 rmseTe_lamb(label, i) = mean(mseTeSub);
@@ -106,9 +132,11 @@ for label = 1 : 3
             % of the degree(diff model complexity)
             prop = 0.7;
             [XTr, yTr, XTe, yTe] = split(y_train(ind), tX, prop);
-            tXTr = [ones(length(yTr), 1) XTr];
-            tXTe = [ones(length(yTe), 1) XTe]; 
+            tXTr = XTr;
+            tXTe = XTe;
             beta = ridgeRegression(yTr,tXTr,lambda(index_best_lambda(label)));
+            %beta = leastSquares(yTr, tXTr);
+            max(beta)
             if label == 1
                 ridgebeta1 = beta;
                 ridgelambda1 = lambda(index_best_lambda(label));
@@ -122,16 +150,20 @@ for label = 1 : 3
             mseTr_degree(s,degree) = computeCost(yTr, tXTr, beta);
             mseTe_degree(s,degree) = computeCost(yTe, tXTe, beta);
 
-            fprintf('\ndegree %d ; lambda %f;  test: %.4f; train:%.4f \n',...
-            degree,lambda(index_best_lambda),...
+            %fprintf('\ndegree %d ; lambda %f;  test: %.4f; train:%.4f \n',...
+            %degree, lambda(index_best_lambda),...
+            %mseTe_degree(s,degree),mseTr_degree(s,degree));
+            
+            fprintf('\ndegree %d ; test: %.4f; train:%.4f \n',...
+            degree,...
             mseTe_degree(s,degree),mseTr_degree(s,degree));
         end
 
     end% for different seed, repeated again
 
     for s = 1:length(seeds)
-        plot(1:9,mseTr_degree(s,:),'b');hold on;
-        plot(1:9,mseTe_degree(s,:),'r');hold on;grid on;
+        %plot(2:4,mseTr_degree(s,:),'b');hold on;
+        %plot(2:4,mseTe_degree(s,:),'r');hold on;grid on;
     end
     
 end
