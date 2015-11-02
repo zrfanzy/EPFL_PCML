@@ -42,6 +42,8 @@ end
 lamdasetting = [0.18, 0.14, 0.09];
 degreesetting = [3, 3, 2];
 
+sumerror = 0;
+
 for label = 1 : 3 
     trerror = 0;
     teerror = 0;
@@ -49,12 +51,15 @@ for label = 1 : 3
     thisY = y_train(ind);
     N = length(thisY)
 
-    %seeds = 1:100;
-    %for s = 1 : length(seeds)
-    %    setSeed(seeds(s));
-    %    idx = randperm(length(thisY));
-    %    
+    seeds = 1:100;
+    for s = 1 : length(seeds)
+        setSeed(seeds(s));
+        idx = randperm(length(thisY));
+        
     tX = [ones(N, 1) mypoly(X(ind,:), degreesetting(label))];
+    
+    %{
+    
     if (label == 1)
         regBeta1 = ridgeRegression(thisY, tX, lamdasetting(label));
     elseif label == 2
@@ -62,20 +67,23 @@ for label = 1 : 3
     else
         regBeta3 = ridgeRegression(thisY, tX, lamdasetting(label));
     end
-    %    prop = 0.8;
-    %    [XTr, yTr, XTe, yTe] = split(thisY(idx), tX(idx,:), prop);
-    %    tXTr = XTr;
-    %    tXTe = XTe;
-    %    beta = ridgeRegression(yTr,tXTr,lamdasetting(label));
-    %    trerror = trerror + computeCost(yTr, tXTr, beta);
-    %    teerror = teerror + computeCost(yTe, tXTe, beta);
-end
-    %fprintf('test: %.4f; train:%.4f \n',...
-    %        teerror / length(seeds), trerror / length(seeds));
-        
-
+    %}
     
-%end
+    
+        prop = 0.8;
+        [XTr, yTr, XTe, yTe] = split(thisY(idx), tX(idx,:), prop);
+        tXTr = XTr;
+        tXTe = XTe;
+        beta = ridgeRegression(yTr,tXTr,lamdasetting(label));
+        trerror = trerror + computeCost(yTr, tXTr, beta);
+        teerror = teerror + computeCost(yTe, tXTe, beta);
+    end
+    fprintf('test: %.4f; train:%.4f \n',...
+            teerror / length(seeds), trerror / length(seeds)); 
+    sumerror = sumerror + teerror /length(seeds) * N
+end
+csvwrite('test_errors_regression.csv',['rms' sumerror / length(y_train)])
+%{
 
 tX = [ones(length(origin_ytrain), 1) X_train];
 
@@ -104,3 +112,5 @@ for i = 1 : length(origin_ytrain)
     errorsum = errorsum + (origin_ytrain(i) - outy)*(origin_ytrain(i) - outy);
 end
 errorsum
+
+%}
