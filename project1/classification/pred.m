@@ -5,7 +5,7 @@ sigmoid = @(x) exp(x)./(1+exp(x));
 
 classlabel = X_test(:,35) > -10;
 
-tX = normalizeFeature(X_test);
+tX = normalizeFeaturebyOther(X_train, X_test);
 X = mypoly(tX,3);
 tXX = [ones(length(X_test),1) X];
 class predY;
