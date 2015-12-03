@@ -90,12 +90,13 @@ X_train[1].shape
 
 logger.info('size X_train:')
 svc.fit(X_train, y_train)
-
+logger.info('training done start predicting')
 
 # In[18]:
 
 type(svc)
-svc.score(X_test, y_test)
+score =  svc.score(X_test, y_test)
+logger.info(score)
 
 
 # In[14]:
