@@ -44,17 +44,17 @@ class CNN:
         self.layer6 = HiddenLayer(self.rng,
                 input = layer6_input,
                 n_in  = 36865,
-                n_out = 3072,
-                activation = acti_func)
-
-        self.layer7 = HiddenLayer(self.rng,
-                input = self.layer6.output,
-                n_in = 3072,
                 n_out = 4096,
                 activation = acti_func)
 
+        #self.layer7 = HiddenLayer(self.rng,
+        #        input = self.layer6.output,
+        #        n_in = 3072,
+        #        n_out = 4096,
+        #        activation = acti_func)
+
         self.layer8 = LogisticRegression(
-                input = self.layer7.output,
+                input = self.layer6.output,
                 n_in = 4096,
                 n_out = 4)
 
@@ -63,7 +63,7 @@ class CNN:
     def build_test_valid_model(self):
         self.valid_model = theano.function(inputs=[self.index],
                 outputs=self.layer8.errors(self.y),
-                givens = {
+                givens= {
                     self.x: self.valid_set_x[self.index * self.batch_size : (self.index+1) * self.batch_size],
                     self.y: self.valid_set_y[self.index * self.batch_size : (self.index+1) * self.batch_size]}
                 )
@@ -87,8 +87,8 @@ class CNN:
 
 
     def build_train_model(self):
-        self.params = self.layer8.params + self.layer7.params \
-                + self.layer6.params
+        self.params = self.layer8.params + self.layer6.params 
+        #        + self.layer6.params
         gparams = []
         for param in self.params:
             gparam = T.grad(self.cost, param)
@@ -113,6 +113,9 @@ class CNN:
         loss_records = []
 
         epoch = 0
+
+        best_valid_loss = numpy.inf
+
         while epoch < n_epochs:
             train_losses = []
             for minibatch_index in xrange( self.n_train_batches ):
@@ -129,6 +132,7 @@ class CNN:
 
             train_score = numpy.mean(train_losses)
             valid_score = numpy.mean(valid_losses)
+
             #test_score = numpy.mean(test_losses)
             #loss_records.append((epoch, train_score, valid_score))
             #print '\nepoch %i, train_score %f, valid_score %f, test_score %f' % (epoch, train_score, valid_score, test_score)
@@ -136,11 +140,16 @@ class CNN:
                 train_score, valid_score)
 
             params = [self.layer8.params, 
-                      self.layer7.params,
+                      #self.layer7.params,
                       self.layer6.params, 
                       valid_score,
                       train_score,
                       epoch]
+
+            if (valid_score < best_valid_loss):
+                vest_valid_loss = valid_score
+                with open('cnn.pkl', 'w') as f:
+                    cPickle.dump(params, f)
 
             epoch += 1
         return loss_records
@@ -157,4 +166,4 @@ def make_training(learning_rate, n_epochs,
     cnn.train(n_epochs, learning_rate) 
 
 if __name__ == '__main__':
-    make_training(learning_rate=0.01, n_epochs=1000, batch_size=100, acti_func=relu)
+    make_training(learning_rate=0.01, n_epochs=1000, batch_size=50, acti_func=relu)

@@ -117,11 +117,13 @@ class PoolLayer(object):
         self.output = pooled_out
 
 class LeNetConvPoolLayer(object):
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2,2), W=None, b=None, activation=T.tanh):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=None, W=None, b=None, activation=T.tanh):
         assert image_shape[1] == filter_shape[1]
         self.input = input
         fan_in = numpy.prod(filter_shape[1:])
-        fan_out = filter_shape[0] * numpy.prod(filter_shape[2:]) / numpy.prod(poolsize)
+        fan_out = filter_shape[0] * numpy.prod(filter_shape[2:])
+        if not (poolsize is None):
+          fan_out = fan_out / numpy.prod(poolsize)
         
         if W is None:
             W_bound = numpy.sqrt(6. /(fan_in + fan_out))
@@ -144,9 +146,12 @@ class LeNetConvPoolLayer(object):
         conv_out = conv_out + self.b.dimshuffle('x', 0, 'x', 'x')
         if not activation is None:
             conv_out = activation(conv_out)
-            pooled_out = downsample.max_pool_2d(
+            if poolsize is None:
+                self.output = conv_out
+            else:
+                pooled_out = downsample.max_pool_2d(
                                                                    input = conv_out,
                                                                    ds = poolsize,
                                                                    ignore_border=True)
-            self.output = pooled_out
+                self.output = pooled_out
             self.params = [self.W, self.b]
