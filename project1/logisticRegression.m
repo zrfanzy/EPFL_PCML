@@ -3,8 +3,8 @@ function beta = logisticRegression(y,tX,alpha)
 
 % algorithm parametes
 sigmoid = @(x) exp(x)./(1+exp(x));
-maxIters = 1000;
-converged = 0.01;
+maxIters = 1000000;
+converged = 0.0000001;
 N = length(y);
 
 % initilization of beta:
@@ -39,10 +39,13 @@ fprintf('L  beta0 beta1 beta2\n');
     % compute Hessian
     S =  diag(sigmoid(tX*beta)).*diag([1-sigmoid(tX*beta)]);
     H = (tX)' * S *tX;
-
-    d = H\g; %solve function H*d = g
-    % newton method update beta
-    beta = beta - alpha * d;
+    try
+        d = pinv(H) * g; %solve function H*d = g
+        % newton method update beta
+        beta = beta - alpha * d;
+    catch 
+        break
+    end
     
 %%  if use IRLS  
 %     sig = sigmoid(tX*beta);

@@ -75,12 +75,19 @@ for label = 1 : 3
         tXTr = XTr;
         tXTe = XTe;
         beta = ridgeRegression(yTr,tXTr,lamdasetting(label));
+        if (label == 1)
+            regBeta1 = beta;
+        elseif label == 2
+            regBeta2 = beta;
+        else
+            regBeta3 = beta;
+        end
         trerror = trerror + computeCost(yTr, tXTr, beta);
         teerror = teerror + computeCost(yTe, tXTe, beta);
     end
     fprintf('test: %.4f; train:%.4f \n',...
             teerror / length(seeds), trerror / length(seeds)); 
-    sumerror = sumerror + teerror /length(seeds) * N
+    sumerror = sumerror + teerror /length(seeds) * N;
 end
 csvwrite('test_errors_regression.csv',['rms' sumerror / length(y_train)])
 %{
