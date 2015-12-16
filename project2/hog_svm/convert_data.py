@@ -22,7 +22,7 @@ import os
 import sys
 import timeit
 from sklearn.multiclass import OneVsOneClassifier
-from sklearn.svm import NuSVC
+from sklearn.svm import SVC
 import numpy
 
 import theano
@@ -41,18 +41,21 @@ n = len(all_data['y'][0][0])
 
 train_set_y = numpy.arange(n, dtype = int)
 for i in range(0, n):
-    train_set_y[i] = all_data['y'][0][0][i][0] - 1
+    #train_set_y[i] = all_data['y'][0][0][i][0] - 1
+    train_set_y[i] = all_data['y'][0][0][i][0] 
 
 
 # In[3]:
 
-train_set_x = all_data['X_hog'][0][0].reshape(n, 5408)
+train_set_x = all_data['X_cnn'][0][0].reshape(n, 36865)
+train_set_x = train_set_x[:,:36864]
 del all_data
 
 
 # In[4]:
 
 print train_set_x.shape
+print train_set_y.shape
 type(train_set_x)
 
 
@@ -68,41 +71,18 @@ from my_io import startLog
 
 # In[7]:
 
-X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.8, 1)
+X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.2, 1)
+print(y_test)
+print(y_train)
+import numpy as np
 
+np.savetxt('X_test.csv',X_test,delimiter=',')
+np.savetxt('X_train.csv',X_train,delimiter=',')
+np.savetxt('y_test.csv',y_test,delimiter=',')
+np.savetxt('y_train.csv',y_train,delimiter=',')
 
 # In[8]:
 
-my_io.startLog(__name__)
-logger = logging.getLogger(__name__)
-logger.info('msg %d %s' % (2015, 'test'))
-
-logger.info('init svm classifier')
-# svc = svm.SVC(probability = True)
-logger.info('fitting svc')
-
-
-# In[9]:
-
-X_train[1].shape
-
-
-# In[11]:
-
-logger.info('size X_train:')
-svc = OneVsOneClassifier(NuSVC(random_state=0,verbose = True))
-
-
-svc.fit(X_train, y_train)
-
-
-logger.info('training done start predicting')
-
-# In[18]:
-
-type(svc)
-score =  svc.score(X_test, y_test)
-logger.info(score)
 
 
 # In[14]:
