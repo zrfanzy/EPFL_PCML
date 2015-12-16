@@ -1,7 +1,7 @@
 
 % origin : split label, X_hog,X_cnn, prop
 
-function [cnn_Xtrain, cnn_ytrain, cnn_Xtest, cnn_ytest, hog_Xtrain, hog_ytrain, hog_Xtest, hog_ytest] = split()
+function [cnn_Xtrain, cnn_ytrain, cnn_Xtest, cnn_ytest, hog_Xtrain, hog_ytrain, hog_Xtest, hog_ytest] = splitdataset()
 % split the data into train and test given a proportion
     load('train.mat')
     prop = 1;
