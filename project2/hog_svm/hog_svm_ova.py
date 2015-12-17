@@ -21,8 +21,9 @@ import gzip
 import os
 import sys
 import timeit
-from sklearn.multiclass import OneVsOneClassifier
-from sklearn.svm import NuSVC
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 import numpy
 
 import theano
@@ -68,7 +69,7 @@ from my_io import startLog
 
 # In[7]:
 
-X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.8, 1)
+X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.2, 1)
 
 
 # In[8]:
@@ -90,8 +91,10 @@ X_train[1].shape
 # In[11]:
 
 logger.info('size X_train:')
-svc = OneVsOneClassifier(NuSVC(random_state=0,verbose = True))
-
+# svc = OneVsRestClassifier(SVC(random_state=0,decision_function_shape='ovr',kernel='rbf', verbose = True))
+# svc = OneVsRestClassifier(LinearSVC(random_state=0,decision_function_shape='ovr',kernel='rbf', verbose = True))
+# svc = LinearSVC(loss = 'hinge',verbose = True,)
+svc = SVC(decision_function_shape = 'ovr',kernel='linear',verbose = True,)
 
 svc.fit(X_train, y_train)
 
