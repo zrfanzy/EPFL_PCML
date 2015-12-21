@@ -1,0 +1,2 @@
+*.pkl filter=lfs diff=lfs merge=lfs -text
+project2/test/cnn3.pkl filter=lfs diff=lfs merge=lfs -text
