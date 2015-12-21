@@ -1,6 +1,7 @@
 from layers import *
 from load_test import *
 
+import urllib
 import pickle
 import cPickle
 import gzip
@@ -53,13 +54,14 @@ class CNN:
 def make_predict(acti_func):
     # load network parameters
     if not (os.path.isfile('cnn3.pkl')):
-        print 'download model file...'
+        print 'downloading model file...'
         model = urllib.URLopener()
-        model.retrieve('')
+        model.retrieve('https://github.com/zrfanzy/EPFL_pcml/blob/theano/project2/test/cnn3.pkl')
 
     f = open('cnn3.pkl', 'rb')
     params = pickle.load(f)
     f.close()
+    # load network weights
     w1 = params[1][0]
     b1 = params[1][1]
     w2 = params[0][0]

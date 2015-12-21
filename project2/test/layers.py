@@ -7,11 +7,11 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv
 
-# RELU(x) = max(x, 0)
+# RELU(x) = max(x, 0), only use for training
 def relu(x):
     return T.switch(x<0, 0, x)
 
-# ber error
+# BER error, only use for training
 def ber(pred, y):
   e = 0
   
@@ -56,11 +56,11 @@ class LogisticRegression(object):
         else:
             raise NotImplementedError()
 
-# random number variables
+# random number variables, only use for training
 rng = numpy.random.RandomState(12345)
 srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
 
-# drop function: for dropout
+# drop function: for dropout, only use for training
 def drop(input, p=0.95, rng=rng):
   mask = srng.binomial(n=1, p=p, size=input.shape, dtype=theano.config.floatX)
   return input * mask
@@ -89,11 +89,13 @@ class HiddenLayer(object):
         self.output = (lin_output if activation is None else activation(lin_output))
         self.params = [self.W, self.b]
 
+# for dropout, only use for training
 def _dropout_from_layer(rng, layer, p):
     mask = srng.binomial(n=1, p=1-p, size=layer.shape)
     output = layer * T.cast(mask, theano.config.floatX)
     return output
 
+# hiddenlayer with droupout, only use for training
 class DropoutHiddenLayer(object):
   def __init__(self, rng, input, n_in, n_out, is_train=1, W=None, b=None,
       activation=None, p=0.95):
@@ -111,6 +113,8 @@ class DropoutHiddenLayer(object):
 
       self.W = W
       self.b = b
+
+      #Wx + b
       lin_output = T.dot(input, drop(self.W)) + self.b
       output = lin_output
       if not(activation is None):
@@ -120,6 +124,7 @@ class DropoutHiddenLayer(object):
       self.output=T.switch(T.neq(is_train, 0), train_output, output)
       self.params= [self.W, self.b]
 
+# MLP class, only use for experiments
 class MLP(object):
     def __init__(self, rng, input, n_in, n_hidden, n_out):
         self.hiddenLayer = HiddenLayer( rng=rng, input=input,
@@ -135,6 +140,7 @@ class MLP(object):
         self.errors = self.logRegressionLayer.errors
         self.params = self.hiddenLayer.params + self.logRegressionLayer.params
 
+# Convolutional layer, only use for experiments
 class LeNetConvLayer(object):
     def __init__(self, rng, input, filter_shape, image_shape, W=None, b=None,
         activation=None):
@@ -165,6 +171,7 @@ class LeNetConvLayer(object):
         self.output = conv_out if activation is None else activation(conv_out)
         self.params = [self.W, self.b]
 
+# only use for experiment
 class PoolLayer(object):
     def __init__(self, input, poolsize=(2,2)):
         pooled_out = downsample.max_pool_2d(
@@ -173,6 +180,7 @@ class PoolLayer(object):
                                             ignore_border = True)
         self.output = pooled_out
 
+# only use for experiment
 class LeNetConvPoolLayer(object):
     def __init__(self, rng, input, filter_shape, image_shape, poolsize=None,
         W=None, b=None, activation=None):
