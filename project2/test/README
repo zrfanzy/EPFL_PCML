@@ -1,0 +1,3 @@
+0. please install python, numpy, theano
+1. run cnn.py
+2. run change_format.m to generate two mat file
