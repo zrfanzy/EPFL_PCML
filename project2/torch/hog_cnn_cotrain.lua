@@ -83,7 +83,6 @@ parameters,gradParameters = model:getParameters()
 print(c.blue'==>' ..' setting criterion')
 criterion = nn.CrossEntropyCriterion()
 -- criterion = nn.CrossEntropyCriterion():cuda()
-
 -- criterion = nn.ClassNLLCriterion() -- for multiclassification
 
 print(c.blue'==>' ..' configuring optimizer')
@@ -116,8 +115,6 @@ function train()
 
     xlua.progress(t, #indices)
 
-    --print(t)
-    --print(v)
     local inputs1 = provider.trainData.data:index(1,v)
     local inputs2 = provider2.trainData.data:index(1,v)
     targets:copy(provider.trainData.labels:index(1,v))
@@ -128,32 +125,15 @@ function train()
 
     print(inputs:size())
     targets = targets:float()
-    --for i = 1,10 do print(inputs[1][i]) end
     local feval = function(x)
       if x ~= parameters then parameters:copy(x) end
       gradParameters:zero()
-      -- print("debug: ")  
-      -- print(torch.type(inputs))
-      -- print(torch.type(targets))
       model = model:float()
-     -- print(inputs:size())
-     -- print(inputs2:size())
---      print(inputs3:size())
      
      -- local outputs = model:forward({torch.FloatTensor(inputs),torch.FloatTensor(inputs2)})
       local outputs = model:forward(torch.FloatTensor(inputs))
       targets = targets:float()
       outputs = outputs:float()
---      print(outputs:size())
-      -- print prediction
---      print(outputs)
---      maxi,index = torch.max(outputs, 2)
---      print(index)
---      print(targets)
-      -- print(torch.sum(index:eq(targets))/opt.Batchsize)
-      -- if t%10 == 0 then print(outputs) end
-      -- print(targets)
-   --   print('done')      
        criterion = criterion:float()
       
       -- compute error by criterion with output and targets:
@@ -196,7 +176,6 @@ function train()
   confusion:updateValids()
   print(('Train accuracy: '..c.cyan'%.2f'..' %%\t time: %.2f s'):format(
         confusion.totalValid * 100, torch.toc(tic)))
---  file_train = 
   train_acc = confusion.totalValid * 100
 
   confusion:zero()
@@ -219,19 +198,8 @@ function test()
   
   if testLogger then
     paths.mkdir(opt.save)
-   -- testLogger:add{train_acc, confusion.totalValid * 100, confusion}
     testLogger:add{train_acc, confusion.totalValid*100}
-   --testLogger:style{'-','-'}
-   --  testLogger:plot()
 
-  --[[  local base64im
-    do
-    --  os.execute(('convert -density 200 %s/test.log.eps %s/test.png'):format(opt.save,opt.save))
-      os.execute(('openssl base64 -in %s/test.png -out %s/test.base64'):format(opt.save,opt.save))
-      local f = io.open(opt.save..'/test.base64')
-      if f then base64im = f:read'*all' end
-    end
-]]--
     local file = io.open(opt.save..'/report.html','w')
     file:write(([[
     <!DOCTYPE html>

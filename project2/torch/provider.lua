@@ -12,9 +12,9 @@ require 'nn'
 require 'image'
 require 'xlua'
 
-local Provider = torch.class 'Provider'
+local cnnProvider = torch.class 'cnnProvider'
 
-function Provider:__init(full)
+function cnnProvider:__init(full)
   local trsize = 4800
   local tesize = 1200
   local total_size = 6000
@@ -46,10 +46,10 @@ function Provider:__init(full)
 
   local trainData = self.trainData
   print('dataset loading..')
-  local X_train = torch.load('train/cnn_Xtrain.bin')
-  local y_train = torch.load('train/cnn_ytrain.bin')
-  local X_test = torch.load('train/cnn_Xtest.bin')
-  local y_test = torch.load('train/cnn_ytest.bin')
+  local X_train = torch.load('../train/cnn_Xtrain.bin')
+  local y_train = torch.load('../train/cnn_ytrain.bin')
+  local X_test = torch.load('../train/cnn_Xtest.bin')
+  local y_test = torch.load('../train/cnn_ytest.bin')
 
 print(y_test)
 print(y_train)
