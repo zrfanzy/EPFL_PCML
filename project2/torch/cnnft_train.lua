@@ -3,8 +3,9 @@ require 'optim'
 require 'nn'
 require 'save_model'
 
--- require 'cunn'
- dofile './provider.lua'
+dofile './cnnprovider.lua'
+dofile './hogprovider.lua'
+
 local c = require 'trepl.colorize'
 
 opt = lapp[[
@@ -17,60 +18,51 @@ opt = lapp[[
    --epoch_step               (default 10)          epoch step
    --model                    (default overfeat_net)     model name
    --max_epoch                (default 30)           maximum number of iterations
+   --resumeFlag		      (default 0)           if resume then load model from file
 ]]
 
 print(opt)
 
 last_loss = -10 -- init loss to a negetive value
 
-do -- data augmentation module
-  local BatchFlip,parent = torch.class('nn.BatchFlip', 'nn.Module')
-
-  function BatchFlip:__init()
-    parent.__init(self)
-    self.train = true
-  end
-
-  function BatchFlip:updateOutput(input)
-    if self.train then
-      local bs = input:size(1)
-      local flip_mask = torch.randperm(bs):le(bs/2)
-      -- randomly choose some image to filp
-      for i=1,input:size(1) do
-      --  if flip_mask[i] == 1 then image.hflip(input[i], input[i]) end
-      end
-    end
-    self.output = input
-    return self.output
-  end
-end
 
 print(c.blue '==>' ..' configuring model')
 local model = nn.Sequential()
--- DataAugmentation:
--- no filp for 36865 fts
--- model:add(nn.BatchFlip():float())
 
--- model:add(nn.Copy('torch:FloatTensor','torch:CudaTensor'):cuda()) --:cuda() make a variable CudaTensor
 -- IMPORTANT: CAST MODEL TO FLOAT!
 
 -- load model from file
-model:add(dofile('models/'..opt.model..'.lua'))
 
--- model:add(dofile('models/'..opt.model..'.lua'):cuda())
---  model:get(2).updateGradInput = function(input) return end
+if resumeFlag == 1 then
+  model:add(dofile('models/'..opt.model..'.lua'))
+else
+  print('load model, resume traning')
+  model = torch.load('logs/cnn_0312/model.net')
+end
+
 print(model)
 model:float()
 print(c.blue '==>' ..' loading data')
-provider = torch.load 'train/cnn_provider.t7'
+
+database = '../train/cnnprovider.t7'
+provider = torch.load(database)
+print('load '..database)
+
+-- load provider, class daving traning data and test data
 provider.trainData.data = provider.trainData.data:float()
 provider.testData.data = provider.testData.data:float()
 
 confusion = optim.ConfusionMatrix(4)
 
+
+-- init log file to save the traing data in process
 print('Will save at '..opt.save)
 paths.mkdir(opt.save)
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
+testLogger_ave = optim.Logger(paths.concat(opt.save, 'epoch_test.log'))
+trainLogger_ave = optim.Logger(paths.concat(opt.save, 'epoch_train.log'))
+trainLogger_confusion = optim.Logger(paths.concat(opt.save, 'confusion_test.log'))
+testLogger_confusion = optim.Logger(paths.concat(opt.save, 'confusion_test.log'))
 testLogger:setNames{'% mean class accuracy (train set)', '% mean class accuracy (test set)'}
 testLogger.showPlot = false
 
@@ -80,7 +72,6 @@ parameters,gradParameters = model:getParameters()
 print(c.blue'==>' ..' setting criterion')
 criterion = nn.CrossEntropyCriterion()
 -- criterion = nn.CrossEntropyCriterion():cuda()
-
 -- criterion = nn.ClassNLLCriterion() -- for multiclassification
 
 print(c.blue'==>' ..' configuring optimizer')
@@ -113,8 +104,6 @@ function train()
 
     xlua.progress(t, #indices)
 
---   print(t)
-    --print(v)
     local inputs = provider.trainData.data:index(1,v)
     targets:copy(provider.trainData.labels:index(1,v))
     inputs = inputs:float()
@@ -123,28 +112,15 @@ function train()
 --   print(targets:size())
 
 
-    --for i = 1,10 do print(inputs[1][i]) end
     local feval = function(x)
       if x ~= parameters then parameters:copy(x) end
       gradParameters:zero()
       -- print("debug: ")  
-      -- print(torch.type(inputs))
-      -- print(torch.type(targets))
       model = model:float()
       local outputs = model:forward(torch.FloatTensor(inputs))
       targets = targets:float()
       outputs = outputs:float()
---      print(outputs:size())
-      -- print prediction
---      print(outputs:size())
---      maxi,index = torch.max(outputs, 2)
---      print(index)
---      print(targets)
-      -- print(torch.sum(index:eq(targets))/opt.Batchsize)
-      -- if t%10 == 0 then print(outputs) end
-      -- print(targets)
---      print('done')      
-       criterion = criterion:float()
+      criterion = criterion:float()
       
       -- compute error by criterion with output and targets:
       local f = criterion:forward(outputs, targets)
@@ -157,7 +133,8 @@ function train()
       confusion:updateValids() 
       local current_acc = confusion.totalValid * 100
             
-            print(confusion.totalValid * 100)
+      print(confusion.totalValid * 100)
+
       if t%30 == 0
          then
             confusion:updateValids() 
@@ -172,8 +149,8 @@ function train()
             last_loss = confusion.totalValid
             print(confusion.totalValid * 100)
             print(confusion)     
-      testLogger:add{tostring(confusion)}
-      testLogger:add{current_acc, confusion.totalValid * 100}
+--      testLogger:add{tostring(confusion)}
+--      testLogger:add{current_acc, confusion.totalValid * 100}
          end
       
       return f,gradParameters
@@ -186,9 +163,9 @@ function train()
   confusion:updateValids()
   print(('Train accuracy: '..c.cyan'%.2f'..' %%\t time: %.2f s'):format(
         confusion.totalValid * 100, torch.toc(tic)))
---  file_train = 
+  trainLogger_confusion:add{tostring(confusion)}
   train_acc = confusion.totalValid * 100
-
+  trainLogger_ave:add{train_acc}
   confusion:zero()
   epoch = epoch + 1
 end
@@ -207,22 +184,10 @@ function test()
   confusion:updateValids()
   print('Test accuracy:', confusion.totalValid * 100)
   
-  if testLogger then
-    paths.mkdir(opt.save)
-   -- testLogger:add{train_acc, confusion.totalValid * 100, confusion}
-    testLogger:add{train_acc, confusion.totalValid*100}
-   --testLogger:style{'-','-'}
-   --  testLogger:plot()
+    testLogger_ave:add{confusion.totalValid*100}
+    testLogger_confusion:add{tostring(confusion)}
 
-  --[[  local base64im
-    do
-    --  os.execute(('convert -density 200 %s/test.log.eps %s/test.png'):format(opt.save,opt.save))
-      os.execute(('openssl base64 -in %s/test.png -out %s/test.base64'):format(opt.save,opt.save))
-      local f = io.open(opt.save..'/test.base64')
-      if f then base64im = f:read'*all' end
-    end
-]]--
-    local file = io.open(opt.save..'/report.html','w')
+   local file = io.open(opt.save..'/report.html','w')
     file:write(([[
     <!DOCTYPE html>
     <html>
@@ -242,16 +207,13 @@ function test()
     file:write(tostring(model)..'\n')
     file:write'</pre></body></html>'
     file:close()
-  end
 
-  -- save model every 50 epochs
---  if epoch % 50 == 0 then
+
     local filename = paths.concat(opt.save, 'model.net')
     print('==> saving model to '..filename)
     torch.save(filename, model:get(3))
- --  end
 
-  confusion:zero()
+    confusion:zero()
 end
 
 

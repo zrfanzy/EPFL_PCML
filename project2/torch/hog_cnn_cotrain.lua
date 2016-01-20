@@ -4,7 +4,8 @@ require 'nn'
 require 'save_model'
 
 -- require 'cunn'
- dofile './provider.lua'
+ dofile './cnnprovider.lua'
+ dofile './hogprovider.lua'
 local c = require 'trepl.colorize'
 
 opt = lapp[[
@@ -62,8 +63,8 @@ model:add(dofile('models/'..opt.model..'.lua'))
 print(model)
 model:float()
 print(c.blue '==>' ..' loading data')
-provider = torch.load 'train/cnn_provider.t7'
-provider2 = torch.load 'train/hog_provider.t7'
+provider = torch.load '../train/cnnprovider.t7'
+provider2 = torch.load '../train/hogprovider.t7'
 provider.trainData.data = provider.trainData.data:float()
 provider2.trainData.data = provider2.trainData.data:float()
 provider.testData.data = provider.testData.data:float()

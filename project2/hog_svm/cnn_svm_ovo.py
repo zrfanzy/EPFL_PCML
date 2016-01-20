@@ -1,6 +1,6 @@
 
 # coding: utf-8
-
+# source ~/python27-gordon/bin/activate
 # In[1]:
 
 from sklearn import svm
@@ -23,58 +23,71 @@ import sys
 import timeit
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.svm import SVC
-import numpy
 
-import theano
 import theano.tensor as T
 
 
-# In[2]:
 
-mat_file_path = './train/train.mat'
+ft = 'cnn' #hog
+Xtrain_file_path = '../train/'+ft+'_Xtrain.mat'
+ytrain_file_path = '../train/'+ft+'_ytrain.mat'
 
-print 'load mat file'
-mat = scipy.io.loadmat(mat_file_path)
-all_data = mat['train']
+print 'load mat file'+Xtrain_file_path
+print 'load mat file'+ytrain_file_path
+
+Xtrainmat = scipy.io.loadmat(Xtrain_file_path)
+ytrainmat = scipy.io.loadmat(ytrain_file_path)
+
+Xdata =Xtrainmat[ft+'_Xtrain']
+ydata =ytrainmat[ft+'_ytrain']
+
 print 'mat file read finish, setting input and output'
-n = len(all_data['y'][0][0])
+# n = len(all_data['y'][0][0])
+n = 4800
 
-train_set_y = numpy.arange(n, dtype = int)
+y_train = numpy.arange(n, dtype = int)
 for i in range(0, n):
-    print(inputs3:size())
-    print(inputs3:size())
-    train_set_y[i] = all_data['y'][0][0][i][0] - 1
+#    train_set_y[i] = all_data['y'][0][0][i][0] - 1
+    y_train[i] = ydata[i] - 1
+
+# train_set_x = all_data['X_cnn'][0][0].reshape(n, 36865)
+X_train = Xdata[:,:]
 
 
-# In[3]:
 
-train_set_x = all_data['X_cnn'][0][0].reshape(n, 36865)
-train_set_x = train_set_x[:,:36864]
-del all_data
+print X_train.shape
+type(X_train)
+#####
+Xtest_file_path = '../train/'+ft+'_Xtest.mat'
+ytest_file_path = '../train/'+ft+'_ytest.mat'
 
+print 'load mat file'+Xtest_file_path
+print 'load mat file'+ytest_file_path
 
-# In[4]:
+Xtestmat = scipy.io.loadmat(Xtest_file_path)
+ytestmat = scipy.io.loadmat(ytest_file_path)
 
-print train_set_x.shape
-type(train_set_x)
+Xdata =Xtestmat[ft+'_Xtest']
+ydata =ytestmat[ft+'_ytest']
 
+print 'mat file read finish, setting input and output'
+# n = len(all_data['y'][0][0])
+n = 1200
 
-# In[5]:
+y_test = numpy.arange(n, dtype = int)
+for i in range(0, n):
+#    train_set_y[i] = all_data['y'][0][0][i][0] - 1
+     y_test[i] = ydata[i] - 1
 
-from split_data import splitData
+# train_set_x = all_data['X_cnn'][0][0].reshape(n, 36865)
+X_test = Xdata[:,:]
+print X_test.shape
+type(X_test)
 
-
-# In[6]:
 
 from my_io import startLog
 
-
-# In[7]:
-
-X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.2, 1)
-
-
-# In[8]:
+# X_test, X_train, y_train, y_test = splitData(train_set_x, train_set_y, 0.2, 1)
 
 my_io.startLog(__name__)
 logger = logging.getLogger(__name__)
@@ -83,76 +96,23 @@ logger.info('msg %d %s' % (2015, 'test'))
 logger.info('init svm classifier')
 
 # svc = svm.SVC(probability = True)
-logger.info('fitting svc, ovo linear, cnn')
+logger.info('fitting svc, ovo RBF, feature')
+
+logger.info(ft)
 
 
-# In[9]:
-
-X_train[1].shape
-
-
-# In[11]:
+print X_train[1].shape
 
 logger.info('size X_train:')
 # svc = OneVsOneClassifier(SVC(random_state=0,decision_function_shape = 'ovo',kernel='rbf',verbose = True))
-svc = SVC(decision_function_shape = 'ovo',kernel='linear',verbose = True)
+svc = SVC(decision_function_shape = 'ovo',kernel='rbf',verbose = True)
 
 svc.fit(X_train, y_train)
 
 
 logger.info('training done start predicting')
 
-# In[18]:
-
 type(svc)
 score =  svc.score(X_test, y_test)
 logger.info(score)
-
-
-# In[14]:
-"""
-predict_probs = svc.predict_proba(X_test)
-
-predict = my_io.toZeroOne(predict_probs)
-# error = classification.zero_one_loss(y_test, predict)
-loss = np.subtract(predict,y_test)
-
-
-# In[ ]:
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn.datasets import make_multilabel_classification
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.svm import SVC
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.decomposition import PCA
-from sklearn.cross_decomposition import CCA
-
-
-# In[ ]:
-
-classif = OneVsRestClassifier(SVC(kernel='linear'))
-classif.fit(X_train, y_train)
-
-
-# In[ ]:
-
-
-
-logger.info('start predict')
-predict_probs = svc.predict_proba(X_test)
-
-predict = my_io.toZeroOne(predict_probs)
-# error = classification.zero_one_loss(y_test, predict)
-loss = np.subtract(predict,y_test)
-
-error = LA.norm(loss)
-logger.info('zero one loss %f',error)
-
-
-# In[ ]:
-
-"""
 
