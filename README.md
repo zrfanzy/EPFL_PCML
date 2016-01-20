@@ -5,3 +5,5 @@ Here is the repo of our project for cs430 Pattern classification and machine lea
 
 
 ### project II image classificaion
+
+- by ZHOU Ruofan & ZENG Xiaohui
